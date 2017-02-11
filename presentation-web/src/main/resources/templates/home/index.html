@@ -1,0 +1,47 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org" layout:decorator="layouts/main">
+<body>
+<div layout:fragment="content">
+    <div class="blog-header">
+        <h1 class="blog-title">The Spring Boot Blog</h1>
+        <p class="lead blog-description">An example of blog implemented using the latest technologies of Spring Boot.</p>
+    </div>
+
+    <div class="row">
+
+        <div class="col-sm-8 blog-main">
+
+            <div class="blog-post" th:each="post : ${posts}">
+                <h2 class="blog-post-title" th:text="${post.title}"></h2>
+                <p class="blog-post-meta" th:inline="text">[[${#dates.format(post.publishedDate, 'dd MMM yyyy HH:mm')}]] by
+                    <a th:href="'https://www.google.ch/search?q=' + ${post.author}" th:text="${post.author}" target="_blank"></a>
+                </p>
+                <div th:utext="${post.content}" th:remove="tag" />
+            </div>
+
+        </div>
+
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+            <div class="sidebar-module sidebar-module-inset">
+                <h4>A question?</h4>
+                <p class="justify">
+                    This project has been documented with a full review of the architecture of the code base. It covers all the technologies used as well.
+                    Don't hesitate to have a look! If you still have some questions, feel free to contact me by email or on any platform listed below.
+
+                </p>
+            </div>
+            <div class="sidebar-module">
+                <h4>Shot me a message!</h4>
+                <ol class="list-unstyled">
+                    <li><a href="mailto:james.menetrey@heig-vd.ch">Email</a></li>
+                    <li><a href="https://github.com/ZenLulz/">Github</a></li>
+                    <li><a href="https://www.linkedin.com/in/jamesmenetrey/">LinkedIn</a></li>
+                </ol>
+            </div>
+        </div><!-- /.blog-sidebar -->
+
+    </div><!-- /.row -->
+
+</div>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org" layout:decorator="layouts/main">
+<body layout:fragment="content" th:with="baseUrl='/manage/post'">
+<div class="blog-header">
+    <h1 class="blog-title">Posts management</h1>
+</div>
+<p>
+    <a th:href="@{${baseUrl} + '/create'}" class="btn btn-default btn-blue"><span class="glyphicon glyphicon-plus"></span> Create a new post</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Published date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="post : ${posts}">
+            <td th:text="${post.title}"></td>
+            <td th:text="${post.author}"></td>
+            <td th:text="${#dates.format(post.publishedDate, 'dd MMM yyyy HH:mm')}"></td>
+            <td>
+                <a th:href="@{${baseUrl} + '/update/' + ${post.id}}" class="btn btn-default btn-blue"><span class="glyphicon glyphicon-edit"></span> Edit</a>
+                <a th:href="@{${baseUrl} + '/delete/' + ${post.id}}" class="btn btn-default btn-blue"><span class="glyphicon glyphicon-remove"></span> Delete</a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</body>
+</html>

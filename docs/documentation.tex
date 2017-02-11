@@ -1,0 +1,354 @@
+\documentclass[a4paper]{article}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[francais]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+
+% Define colors for hyperlinks
+\usepackage[dvipsnames]{xcolor}
+\definecolor{theblue}{rgb}{0.02,0.04,0.48}
+
+% Package to handle links (handle long url as well)
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+\hypersetup{
+	linkcolor  = theblue,
+	citecolor  = theblue,
+	urlcolor   = theblue,
+	colorlinks = true,
+}
+
+% Remove each indent for the start of the paragraphs and add a space before (like any Swiss document)
+\usepackage[parfill]{parskip}
+
+% Enable to use notes that straddle the margin and the document content
+\usepackage{wrapfig}
+\usepackage{booktabs}
+
+% Code highlighting
+\usepackage{minted}
+\setminted{breaklines}
+
+% Prevent to crop paragraphs in the middle of 4 lines.
+\usepackage[defaultlines=4,all]{nowidow}
+
+% Font with microtyping
+\usepackage{charter}
+\usepackage[kerning=true,spacing=true,tracking=true]{microtype}
+
+\title{Analyse et programmation orientée objet\\ Travail pratique\\ {\Large Haute école spécialisée de Suisse occidentale}}
+\author{{\normalsize Chargé de cours}\\ Raphaël P. Barazzutti\\\href{mailto:raphael.barazzutti@heig-vd.ch}{raphael.barazzutti@heig-vd.ch}\and {\normalsize Travail réalisé par }\\ Jämes Ménétrey\\\href{mailto:james.menetrey@heig-vd.ch}{james.menetrey@heig-vd.ch}}
+\date{Date de rendu du projet: \today}
+\begin{document}
+	
+	\maketitle
+	\tableofcontents
+	
+	\section{Introduction}
+	
+	Ce projet est réalisé pour la deuxième évaluation de l'unité AProgOO. Les critères d'évaluation sont:
+	
+	\begin{itemize}
+		\item l'utilisation de la programmation orientée objet,
+		\item l'utilisation de technologies de l'écosystème Java, tel que Spring et
+		\item l'utilisation de JavaDoc pour la documentation des classes et méthodes.
+	\end{itemize}
+	
+	Pour cela, le sujet du travail est une plateforme de blogging permettant à un utilisateur de créer des articles qui sont ensuite affichés sur la page d'accueil. Les figures suivantes représentent les quelques interfaces réalisées.
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.7\linewidth]{img/blog-home}
+		\caption{Page d'accueil du blog.}
+	\end{figure}
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.7\linewidth]{img/blog-manage-posts}
+		\caption{Page gérant les posts écrits.}
+	\end{figure}
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.7\linewidth]{img/blog-edit}
+		\caption{Page éditant le contenu d'un post.}
+	\end{figure}
+	
+	
+	\section{Architecture}
+	\subsection{N-tier architecture}
+	
+	Le projet a subdivisé selon une architecture n-tier. Le code est ainsi séparé en trois couches:
+	
+	\begin{itemize}
+		\item \textbf{Data}: interaction avec le système de stockage des données (comme une base de données).
+		\item \textbf{Domain}: contiens les modèles de données ainsi que la logique Business.
+		\item \textbf{Presentation}: technologie manipulant les données avec la logique Business (comme une application Web).
+	\end{itemize}
+	
+	La couche \emph{Presentation} ne peut interagir qu'avec la couche \emph{Domain} et celle-ci ne peut interagir qu'avec la couche \emph{Data}, comme illustré sur le diagramme \ref{fig:ntier}.
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.8]{img/ntier.png}
+		\caption{Architecture n-tier en détail.}
+		\label{fig:ntier}
+	\end{figure}
+	
+	
+	\subsection{Structure du projet}
+	
+	La solution de développement est découpée en plusieurs modules Maven, comme détaillée dans le paragraphe suivant et dans la figure \ref{fig:proj-struct}.
+	La structure est composée ainsi par couche:
+	
+	\begin{itemize}
+		\item Data
+		\begin{itemize}
+			\item \textbf{data}: module d'abstraction de données. Il contient uniquement les interfaces liées à  la manipulation des données.
+			\item \textbf{data-jpa}: module d'implémentation de manipulation des données, avec le framework \emph{Spring Data JPA}.
+		\end{itemize}
+			\item Domain
+		\begin{itemize}
+			\item \textbf{domain}: module contenant les modèles de données que les autres couches manipulent.
+			\item \textbf{services}: module d'abstraction des services. Il contient les contrats de la logique et processus Business.
+			\item \textbf{services-impl}: module d'implémentation des services. Il contient la logique et processus Business.
+		\end{itemize}
+			\item Presentation
+		\begin{itemize}
+			 \item \textbf{presentation-web}: module contenant l'application Web.
+		\end{itemize}
+			\item Integration tests
+		\begin{itemize}
+			 \item \textbf{integration-tests}: module contenant les tests d'intégrations de la solution.
+		\end{itemize}
+	\end{itemize}
+	
+	Un répertoire supplémentaire \textit{docs} est présent, contenant le fichier \LaTeX\ de ce document ainsi que la JavaDoc du projet.
+	
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[scale=0.7]{img/project-structure.PNG}
+		\caption{La structure de 1\textsuperscript{er} et de 2\textsuperscript{ème} niveau du projet.}
+		\label{fig:proj-struct}
+	\end{figure}
+	
+	
+	\section{Compiler le projet}
+	\subsection{Création des packages}
+	
+	Le projet peut être compilé en exécutant la commande Maven suivante:
+	
+	\begin{minted}{bash}
+mvn clean package
+	\end{minted}
+	
+	Maven va invoquer son mon mécanisme nommé \textit{Ractor}\footnote{Maven Reactor: \url{https://maven.apache.org/guides/mini/guide-multiple-modules.html}}. Il s'agit d'un système automatiquement utilisé lorsque Maven doit compiler un projet composé de plusieurs modules. Pour résoudre les dépendances entre ces modules (qui ne sont pas installé dans le store \textit{.m2} local), Maven construit l'arborescence des dépendances et place les modules compilés dans un emplacement temporaire, servant ainsi à  compiler les modules qui en sont dépendants.
+	
+	
+	\subsection{Exécution de l'application Web}
+	
+	L'application Web peut ensuite être exécutée avec la commande suivante:
+	
+	\begin{minted}{bash}
+java -jar presentation-web/target/presentation-web-1.0-SNAPSHOT-exec.jar
+	\end{minted}	
+	
+	
+	\subsection{Création de la JavaDoc}
+	
+	Il est possible de construire la JavaDoc avec la commande Maven suivante:
+	
+	\begin{minted}{bash}
+mvn javadoc:aggregate
+	\end{minted}
+	
+	Le paramètre \texttt{aggregate}\footnote{Maven JavaDoc aggregate: \url{http://maven.apache.org/plugins-archives/maven-javadoc-plugin-2.10.2/examples/aggregate.html}} permet de construire la documentation basée sur un projet possédant plusieurs modules.
+	
+	\section{Technologies utilisées}
+	\subsection{Couche Data}
+	
+	\paragraph{Spring Data JPA} Bibliothèque permettant de manipuler une base de données en fournissant plusieurs outils, tel qu'un CRUD. Il s'agit de la couche de données recommandée par Spring. Une fois les interfaces déclarées, il suffit de configurer l'application (à  l'aide du fichier \textit{application.yml}) en lui fournissant les détails de connexion à  la base de données pour s'y connecter et y effectuer des requêtes.
+	
+	\paragraph{Flyway DB} Outil permettant d'effectuer des migrations pour une base de données. Lorsque l'application Web démarre, Flyway DB compare automatiquement l'état de la base de données avec tous les scripts de migration et aligne la base de données si nécessaire. Les fichiers de migration sont disponibles dans \textit{data-jpa/src/main/resources/db/migration}.
+	
+	\paragraph{H2 Database} Base de données embarquée dans l'application. Celle-ci est démarrée en même temps que l'application et génère un fichier de stockage dans \textit{\textasciitilde/blog-spring-boot}. L'interface de gestion de la base de données a été configurée dans le fichier \textit{application.yml} pour répondre à  l'URL \url{http://localhost:8080/h2}, à condition que l'application soit démarrée. Lorsque l'application est déployée sur un environnement de production, le fichier de configuration \textit{application-production.yml} réécrit certaines configurations du fichier de base, ne rendant plus disponible l'interface d'administration de la base de données H2, par exemple.
+	
+	
+	\subsection{Couche Domain}
+	
+	\paragraph{Hibernate validator} Collection d'annotations permettant d'augmenter les modèles de données avec des informations de validation. Les autres couches peuvent ainsi déduire si l'état d'un modèle est valide pour ensuite être persisté.
+	
+	
+	\subsection{Couche Presentation}
+	
+	\paragraph{Spring MVC} Framework fournissant un ensemble de technologies et de bonnes pratiques afin de concevoir un site Web avec une infrastructure MVC.
+	
+	\paragraph{Thymeleaf} Template engine pour le rendu de vues dans le site Web.
+	
+	\paragraph{DevTools} Outils facilitant la création d'une application Web avec Spring Boot. Ceux-ci peuvent recompiler automatiquement les modules si des modifications y sont apportées lorsque le serveur Web fonctionne et rafraichit automatiquement les pages impactées grâce à l'extension LiveReload\footnote{Plus d'informations sur LiveReload: \url{http://livereload.com}}.
+	
+	\paragraph{Bootstrap} Framework front-end rendant le site responsive pour être compatible avec toutes les tailles de périphériques. 
+	
+	\paragraph{CKEditor} Outil WYSIWYG permettant à  l'utilisateur de formater correctement ses écrits lors de la création des posts.
+	
+	
+	\section{Héritage de configuration}
+	
+	Tous les modules de la solution de développement utilisent Maven, permettant ainsi l'héritage de configuration entre les fichiers \textit{pom.xml}. Le fichier \textit{pom.xml} parent est celui situé à  la racine de la solution. Comme ce projet a été développé avec le framework Spring Boot, le fichier parent utilise lui-même le fichier parent de Spring Boot\footnote{Il s'agit d'une configuration recommandée pour Spring Boot: \url{http://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-build-systems.html\#using-boot-maven}.}.
+	
+	
+	\section{JAR et WAR}
+	
+	Les applications Web traditionnelles sont exportées en une archive WAR, permettant leur exécution dans un serveur Web séparé. Grâce à  Spring Boot, il est possible de créer un JAR intégrant le serveur Web ainsi que le système de base de données. L'application peut ensuite être déployée dans un conteneur Docker et dans un Cloud tel que AWS. Pour ce projet, il a donc été choisi d'utiliser l'optique du JAR afin de rendre l'application facilement extensible.
+	
+	
+	\section{Template engine}
+	\subsection{JSP et Thymeleaf}
+	
+	Lors de la réalisation du projet, il a fallu utiliser un système de rendu des vues. Spring MVC utilise la technologie JSP par défaut. Cependant, le framework Spring Boot recommande l'utilisation de la technologie Thymeleaf, qui permet d'effectuer des opérations plus étendues. Pour les amoureux de JSP, un des repositories Github officiel de Spring Boot\footnote{Spring Boot avec JSP: \url{https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples/spring-boot-sample-web-jsp}} intègre JSP. Malgré cela, le site officiel de Spring Boot indique que l'utilisation de JSP possède ces limitations\footnote{Limitation JSP dans Spring Boot: \url{http://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-developing-web-applications.html\#boot-features-jsp-limitations}}, par exemple, l'impossibilité de créer un JAR unique pour une application Web.
+	
+	Pour cette raison, Thymeleaf a été la technologie choisie pour la réalisation de ce projet.
+	
+	\subsection{Thymeleaf layout}
+	
+	Thymeleaf intègre la notion de layouts (ou templates) de deux manières différentes\footnote{Plus d'informations sur les layouts en Thymeleaf: \url{http://www.thymeleaf.org/doc/articles/layouts.html}}:
+	
+	\begin{itemize}
+		\item utilisation de système d'inclusion, et
+		\item utilisation d'un système hiérarchique. 
+	\end{itemize}
+	
+	\begin{wrapfigure}{r}[2.5cm]{0cm}
+		\vspace{10\baselineskip}
+		\begin{tabular}{p{5cm}}
+			\toprule
+			Spring Boot offre le support de beaucoup de technologies pour le rendu de pages.
+			\footnotemark\\
+			\bottomrule
+		\end{tabular}
+	\end{wrapfigure}
+	
+	\footnotetext{Les templating engines supportés par Spring Boot: \url{http://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-developing-web-applications.html\#boot-features-spring-mvc-template-engines}}
+	
+	Le premier permet de facilement d'inclure un fichier Thymeleaf dans un autre fichier grâce à  l'attribut \texttt{th:include}. Il s'agit de l'équivalent de la fonction \texttt{include} de PHP. Cela peut-être pratique pour un contenu isolé à  réutiliser.
+	
+	La deuxième méthode est plus intéressante (mais plus complexe) pour la gestion d'un template qui sera utilisé pour plusieurs pages. Il s'agit de la méthode du donut. Le template définit un cadre d'éléments, comme le préambule HTML, l'en-tête et le pied de page. Au milieu du template, on définit où est le corps de la page et le moteur de rendu de Thymeleaf injectera le contenu de la page en cours à  cet endroit. Ce projet utilise cette approche avec le fichier \textit{presentation-web/src/main/resources/templates/layouts/main.html}.
+	
+	
+	\section{Java 8: Stream}
+	
+	Java 8 introduit une nouvelle fonctionnalité appelée \emph{Stream}. Elle permet d'appliquer des projections ou des sélections sur une collection de données. Il est possible d'en avoir un aperçu dans le service \texttt{PostService}. Ce dernier reçoit une liste de posts (dans le contexte d'un blog) d'un repository. Il est donc nécessaire de les trier du plus récent au plus vieux. Voici un aperçu du code permettant d'ordonner les posts selon leur date de publication:
+	
+	\begin{minipage}{\textwidth} 
+		\begin{minted}{java}
+/**
+* Retrieves all the posts.
+*
+* @return The return value is a collection of {@link Post}.
+*/
+@Override
+public Iterable<Post> findAll() {
+return StreamSupport.stream(repository.findAll().spliterator(), false)
+	.sorted((o1, o2) -> o2.getPublishedDate()
+	.compareTo(o1.getPublishedDate()))
+	.collect(Collectors.toList());
+}
+		\end{minted}
+	\end{minipage}
+	
+	\section{Testing}
+	\subsection{Tests unitaires}
+	
+	Les technologies suivantes ont été utilisées pour la réalisation de tests unitaires (implémentés dans le module \textit{services-impl}). Ces dernières sont disponibles dans la dépendance \texttt{spring-boot-starter-test} pour Spring Boot.
+	
+	\paragraph{junit} Outil fournissant l'infrastructure pour l'exécution de tests unitaires.
+	
+	\paragraph{hamcrest} Fluent API pour l'assertion des tests unitaires. Les assertions deviennent plus lisibles.
+	
+	\paragraph{mockito} Outil de mocking afin d'écrire des tests unitaires en injectant des dépendances fictives basées sur des interfaces.
+	
+	De nombreux goals Maven exécutent les tests unitaires. Celui spécialisé dans l'exécution de ces tests est: \texttt{mvn test}.
+	
+	
+	\subsection{Tests d'intégration}
+	
+	À l'opposé des tests unitaires, les tests d'intégration permettent de tester l'application sans couche d'isolation. Spring Boot supporte aisément les tests d'intégration en décorant les classes de tests par deux annotations:
+	
+	\begin{minted}{java}
+@RunWith(SpringRunner.class)
+@SpringBootTest
+	\end{minted}
+	
+	Cela a pour effet de démarrer l'application (on peut voir le démarrage complet dans la console de log). Les tests d'intégration sont ensuite exécutés sur l'application démarrée. Il est à  noter que les tests d'intégration sont localisés dans un module séparé, car teste l'intégralité des autres modules. Cela réduit aussi le problème de dépendances circulaires entre les modules de la solution.
+	
+	
+	\section{JavaDoc}
+	
+	Le plugin Maven de génération de la JavaDoc du projet a été intégré au fichier \textit{pom.xml} parent. Il suffit d'exécuter la commande suivante pour générer la documentation:
+	
+	\begin{minted}{bash}
+mvn javadoc:aggregate
+	\end{minted}
+	
+	Le paramètre \texttt{aggregate} permet de générer la documentation pour tous les modules d'un projet.
+	La documentation de ce projet a été générée dans le dossier \textit{docs/}.
+	
+	
+	\section{Bonus: Docker and Amazon Web Services}
+	\subsection{Création du conteneur}
+	
+	Grâce à la création d'un JAR avec Spring Boot, il est facile d'en créer un conteneur Docker. Le fichier parent Maven contient le plugin permettant de créer des conteneurs Docker avec la commande suivante (pour autant que Docker soit installé sur la machine):
+	
+	\begin{minted}{bash}
+mvn docker:build
+	\end{minted}
+	
+	La commande doit être exécutée dans le module où se trouve le point d'entrée de l'application Web, c'est-à-dire dans le dossier \textit{presentation.web/}. Le conteneur est maintenant disponible dans Docker. Tous les conteneurs peuvent être affichés à  l'aide de la commande suivante:
+	
+	\begin{minted}{bash}
+docker images
+	\end{minted}
+	
+	Finalement, le conteneur peut être exécuté avec la commande suivante:
+	
+	\begin{minted}{bash}
+docker run -it -p 80:8080 blog-spring-boot
+	\end{minted}
+	
+	
+	\subsection{Envoi sur Amazon Web Services}
+	
+	Il est possible de créer un compte gratuit et de profiter de quelques services d'Amazon Web Services en créant un compte sur \url{http://aws.amazon.com}. Après inscription, le service hébergeant les conteneurs Docker se nomme \textit{EC2 Container Service}. En suivant les quelques étapes, il est possible de créer un repository où il sera nécessaire de s'authentifier, de tag le conteneur sur la machine locale afin de le rendre unique puis finalement de l'upload avec les commandes suivantes:
+	
+	\begin{minted}{bash}
+aws ecr get-login --region eu-central-1
+docker tag blog-spring-boot:latest 245527330870.dkr.ecr.eu-central-1.amazonaws.com/blog-spring-boot:latest
+docker push 245527330870.dkr.ecr.eu-central-1.amazonaws.com/blog-spring-boot:latest
+	\end{minted}
+	
+	Ces commandes contiennent des données liées au repository utilisé lors de la réalisation de ce projet. Elles sont données par Amazon au moment de l'upload du conteneur. Amazon indique ensuite les étapes à  suivre pour la mise en ligne du conteneur et propose un sous-domaine unique pour l'application, comme illustré sur la figure \ref{fig:aws-url}.
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.7\linewidth]{img/aws-url}
+		\caption{Un exemple de sous-domaine proposé par Amazon pour un conteneur.}
+		\label{fig:aws-url}
+	\end{figure}
+	
+	
+	\section{Sources d'information}
+	
+	Pour la réalisation de ce travail, les cours de l'unité AProgOO ont été la base sur laquelle j'ai fondé mon savoir sur les technologies Java. J'ai ensuite pris la liberté de consulter les vidéos suivantes disponible sur Pluralsight pour en apprendre plus sur l'environnement Spring:
+	
+	\begin{itemize}
+		\item Spring Fundamentals\footnote{\url{https://app.pluralsight.com/library/courses/spring-fundamentals/}}
+		\item Introduction to Spring MVC\footnote{\url{https://app.pluralsight.com/library/courses/springmvc-intro/}}
+		\item Introduction to Spring MVC 4\footnote{\url{https://app.pluralsight.com/library/courses/spring-mvc4-introduction/}}
+		\item Creating Your First Spring Boot Application\footnote{\url{https://app.pluralsight.com/library/courses/spring-boot-first-application/}}
+		\item Spring Boot: Efficient Development, Configuration, and Deployment\footnote{\url{https://app.pluralsight.com/library/courses/spring-boot-efficient-development-configuration-deployment/}}
+	\end{itemize}
+	
+	J'ai ainsi passé plusieurs jours a étudier ce framework qui offre de très bonnes fonctionnalités et possède une grande communauté. Grâce à  ces connaissances et maintenant que je suis à  l'aise avec la JVM, je peux à  présent en apprendre plus sur Scala ainsi que son écosystème.
+ 
+\end{document}
